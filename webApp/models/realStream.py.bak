@@ -105,7 +105,7 @@ class RealStream:
         print("process image for -> " + filename)
 
         # read image
-        filepath = utils.get_file_path('webApp/uploads', filename)
+        filepath = utils.get_file_path('uploads', filename)
         image = cv2.imread(filepath)
 
         # process frame

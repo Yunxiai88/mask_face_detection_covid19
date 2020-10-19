@@ -10,7 +10,7 @@
 
             // base upload function
             $('#uploadImage').fileinput({
-                uploadUrl: '/uploadImage',
+                uploadUrl: '/uploadimage',
                 theme : 'explorer-fas',
                 uploadAsync: false,
                 showUpload: false,

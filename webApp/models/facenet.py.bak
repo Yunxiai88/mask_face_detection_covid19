@@ -70,8 +70,8 @@ class FaceNet:
     def init_weight(self):
         print("[INFO] loading YOLO from disk...")
         # derive the paths to the YOLO weights and model configuration
-        weightsPath = utils.get_file_path("webApp/data", "yolov4.weights")
-        configPath = utils.get_file_path("webApp/cfg", "yolov4.cfg")
+        weightsPath = utils.get_file_path("data", "yolov4.weights")
+        configPath = utils.get_file_path("cfg", "yolov4.cfg")
         return cv2.dnn.readNetFromDarknet(configPath, weightsPath)
 
     def triplet_loss(y_true, y_pred, alpha = 0.2):

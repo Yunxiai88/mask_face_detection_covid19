@@ -122,7 +122,7 @@ def uploadfile():
         rs = RealStream()
 
         # check file type
-        filepath = utils.get_file_path('webApp/uploads', file.filename)
+        filepath = utils.get_file_path('uploads', file.filename)
         if filetype.is_image(filepath):
             output = rs.processimage(file.filename)
         elif filetype.is_video(filepath):

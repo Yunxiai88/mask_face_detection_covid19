@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 
 def get_conf(key, value):
     cf=configparser.ConfigParser()
-    cf.read('webApp/util/config.ini')
+    cf.read('util\\config.ini')
     return cf.get(key, value)
 
 def get_file_path(folder, filename):
@@ -20,7 +20,7 @@ def allowed_file(filename):
 def save_file(file):
     if allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file.save(os.path.join('webApp\\uploads', filename))
+        file.save(os.path.join('uploads', filename))
         return 1
     return 0
 
