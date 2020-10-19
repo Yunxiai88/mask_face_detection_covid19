@@ -1,11 +1,8 @@
-*.pyc
-__pycache__/*
+.DS_Store
+yolov4/data/.DS_Store
 webApp/models/__pycache__/*
 webApp/models/util/__pycache__/*
 webApp/uploads/*
 webApp/data/*
-.vscode/*
-.ipynb_checkpoints/*
-.DS_Store
-*.pyc
-SystemCode/project_key.json
+.weights
+.137

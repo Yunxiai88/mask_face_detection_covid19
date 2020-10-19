@@ -58,9 +58,14 @@
 1. **WebUI**
 
 2. **Execution** 
-* run this command in the backend:  
+
+download the trained weight from 
+https://drive.google.com/file/d/1-7JQiyR2yLLPJJJNV30NZIgpqnwsk1Jh/view?usp=sharing
+and put it under /yolov4/yolov4_custom_train_final.weights
+
+* run this command at the project root directory:  
        ```
-       $ python mdfrWeb/webstreaming.py --ip 127.0.0.1 --port 8000
+       $ python webApp/maskdetection.py --ip 127.0.0.1 --port 8000
        ```
 * open URL in your browser:
        ```

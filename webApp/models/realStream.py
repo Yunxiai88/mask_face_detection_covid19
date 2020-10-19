@@ -5,9 +5,11 @@ import threading
 import datetime
 import imutils
 
-from imutils.video import VideoStream, FPS
-from models.facenet import FaceNet
+from imutils.video import FPS
+from models.webcamVideoStream import WebcamVideoStream
+
 from models.util import utils
+from models.facenet import FaceNet
 
 # initialize the output frame and a lock used to ensure thread-safe
 # exchanges of the output frames (useful when multiple browsers/tabs
@@ -28,8 +30,8 @@ class RealStream:
         global vs, outputFrame, lock
 
         # initialize the video stream and allow the camera sensor to warmup
-        #vs = VideoStream(usePiCamera=1).start()
-        vs = VideoStream(src=0).start()
+        vs = WebcamVideoStream(src=0).start()
+        fps = FPS().start()
         time.sleep(2.0)
 
         # initialize the detection and the total number of frames read thus far
@@ -41,6 +43,9 @@ class RealStream:
             # read the next frame from the video stream
             frame = vs.read()
 
+            if frame is None:
+                break
+
             # initial width and height for frame
             if W is None or H is None:
                 (H, W) = frame.shape[:2]
@@ -51,6 +56,10 @@ class RealStream:
             # acquire the lock, set the output frame, and release the lock
             with lock:
                 outputFrame = frame.copy()
+
+            fps.update()
+        print("thread is stopped, stopping camera")
+        vs.stop()
 
     def generate():
         # grab global references to the output frame and lock variables

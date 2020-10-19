@@ -1,6 +1,7 @@
 import os
 import cv2
 import csv
+import time
 import numpy as np
 
 from PIL import Image
@@ -69,10 +70,9 @@ class FaceNet:
     def init_weight(self):
         print("[INFO] loading YOLO from disk...")
         # derive the paths to the YOLO weights and model configuration
-        weightsPath = os.path.sep.join(["data", "yolov4.weights"])
-        configPath = os.path.sep.join(["cfg", "yolov4.cfg"])
-        #return cv2.dnn.readNetFromDarknet(configPath, weightsPath)
-        return cv2.dnn_DetectionModel(configPath, weightsPath)
+        weightsPath = utils.get_file_path("data", "yolov4.weights")
+        configPath = utils.get_file_path("cfg", "yolov4.cfg")
+        return cv2.dnn.readNetFromDarknet(configPath, weightsPath)
 
     def triplet_loss(y_true, y_pred, alpha = 0.2):
         print("using triplet_loss function...")
@@ -123,12 +123,17 @@ class FaceNet:
         # pass of the YOLO object detector, giving us our bounding boxes
         # and associated probabilities
         blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (416, 416), swapRB=True, crop=False)
-
-        ln = self.net.getLayerNames()
-        ln = [ln[i[0] - 1] for i in self.net.getUnconnectedOutLayers()]
-
         self.net.setInput(blob)
-        layerOutputs = self.net.forward(ln)
+
+        layer = self.net.getLayerNames()
+        layer = [layer[i[0] - 1] for i in self.net.getUnconnectedOutLayers()]
+
+        # calculate execute time
+        start = time.time()
+        layerOutputs = self.net.forward(layer)
+        end = time.time()
+
+        print("[INFO] YOLO took {:.6f} seconds".format(end - start))
 
         # initialize our lists of detected bounding boxes, confidences,
         # and class IDs, respectively
@@ -191,7 +196,7 @@ class FaceNet:
                         if face_frame.size != 0 :
                             face_frame = cv2.resize(face_frame, (160, 160))
                             encode = self.get_embedding(face_frame)
-                            name = self.find_person(encode, self.database)
+                            name = self.find_person(encode)
                         if name == "None":
                             label = "Not found"
                         else :

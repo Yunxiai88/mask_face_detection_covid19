@@ -32,7 +32,7 @@ def realStream():
 
     # start a thread that will perform mask detection
     rs = RealStream()
-    t = threading.Thread(target=rs.mask_detection())
+    t = threading.Thread(target=rs.mask_detection)
     t.daemon = True
     t.start()
     # forward to real stream page
