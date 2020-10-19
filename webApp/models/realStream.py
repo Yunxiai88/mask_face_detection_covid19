@@ -4,31 +4,10 @@ import cv2
 import threading
 import datetime
 import imutils
-import numpy as np
 
 from imutils.video import VideoStream, FPS
 from models.facenet import FaceNet
 from models.util import utils
-
-# setup the path for YOLOv4
-
-# load the class labels our YOLO model was trained
-labelsPath = os.path.sep.join(["cfg", "classes.names"])
-LABELS = open(labelsPath).read().strip().split("\n")
-
-# initialize a list of colors to represent each possible class label
-np.random.seed(42)
-COLORS = np.random.randint(0, 255, size=(len(LABELS), 3), dtype="uint8")
-
-# derive the paths to the YOLO weights and model configuration
-weightsPath = os.path.sep.join(["data", "yolov4.weights"])
-configPath = os.path.sep.join(["cfg", "yolov4.cfg"])
-
-# load our YOLO object detector and determine only the *output* layer names
-print("[INFO] loading YOLO from disk...")
-net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
-ln = net.getLayerNames()
-ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
 # initialize the output frame and a lock used to ensure thread-safe
 # exchanges of the output frames (useful when multiple browsers/tabs
@@ -61,6 +40,10 @@ class RealStream:
         while getattr(th, "running", True):
             # read the next frame from the video stream
             frame = vs.read()
+
+            # initial width and height for frame
+            if W is None or H is None:
+                (H, W) = frame.shape[:2]
 
             # process frame
             frame = self.processFrame(frame, W, H)
@@ -95,7 +78,7 @@ class RealStream:
 
 
     # process frame
-    def processFrame(self, frame, W, H):
+    def processFrame(self, frame, W=None, H=None):
             if W is None or H is None:
                 (H, W) = frame.shape[:2]
 
@@ -106,7 +89,7 @@ class RealStream:
                 cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
             # call function to detect the mask of frames read thus far
-            self.facenet.detect(frame, net, ln, LABELS, COLORS, W, H)
+            self.facenet.detect(frame, W, H)
 
             return frame
 
@@ -119,7 +102,7 @@ class RealStream:
         image = cv2.imread(filepath)
 
         # process frame
-        frame = self.processFrame(image, None, None)
+        frame = self.processFrame(image)
 
         # generate processed image
         basename = os.path.splitext(filename)[0]

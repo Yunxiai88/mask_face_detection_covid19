@@ -137,8 +137,7 @@ def video_feed():
     # return the response generated along with the specific media
     # type (mime type)
     rs = RealStream()
-    return Response(rs.generate(),
-        mimetype = "multipart/x-mixed-replace; boundary=frame")
+    return Response(rs.generate(), mimetype = "multipart/x-mixed-replace; boundary=frame")
 
 @app.route("/download/<fileName>", methods=['GET'])
 def download(fileName):

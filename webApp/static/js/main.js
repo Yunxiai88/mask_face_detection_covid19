@@ -63,7 +63,7 @@
                 showPreview: true,
                 showCancel:true,
                 showCaption: true,
-                allowedFileExtensions: ['jpg', 'png', 'mp4', 'avi', 'dat', '3gp', 'mov', 'rmvb'],
+                allowedFileExtensions: ['jpg', 'png', 'mp4', 'avi', 'mov'],
                 maxFileSize : 153600,
                 maxFileCount : 1,
                 browseClass: "btn btn-primary ",

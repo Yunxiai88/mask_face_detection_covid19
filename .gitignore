@@ -1,0 +1,11 @@
+*.pyc
+__pycache__/*
+webApp/models/__pycache__/*
+webApp/models/util/__pycache__/*
+webApp/uploads/*
+webApp/data/*
+.vscode/*
+.ipynb_checkpoints/*
+.DS_Store
+*.pyc
+SystemCode/project_key.json

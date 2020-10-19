@@ -6,6 +6,8 @@ import numpy as np
 from PIL import Image
 from mtcnn.mtcnn import MTCNN
 
+from models.util import utils
+
 from sklearn.preprocessing import Normalizer
 from scipy.spatial.distance import cosine
 
@@ -20,15 +22,20 @@ print("Using gpu: {0}".format(tf.test.is_gpu_available(
 
 class FaceNet:
     def __init__(self):
-        self.CONFIDENCE = 0.5
-        self.THRESHOLD = 0.3
-        self.init_database()
-        self.init_model()
+        self.CONFIDENCE       = 0.5
+        self.THRESHOLD        = 0.3
+        self.LABELS           = self.init_label()
+        self.COLORS           = self.init_color()
+        self.net              = self.init_weight()
+        self.model_Face       = self.init_model()
+        self.database         = self.init_database()
 
+    # function to read database
     def init_database(self):
-        self.database = {}
+        print("read data from database...")
+        database = {}
 
-        dbPath = os.path.sep.join(["data", "dict.csv"])
+        dbPath = utils.get_file_path("data", "dict.csv")
         reader = csv.reader(open(dbPath), delimiter='\n')
 
         for row in reader:
@@ -37,15 +44,38 @@ class FaceNet:
             encode = encode.replace('[','')
             encode = encode.replace(']','')
             encode = np.fromstring(encode, dtype=float, sep=',')
-            self.database[data[0]] = encode
+            database[data[0]] = encode
+        return database
 
     def init_model(self):
-        facePath = os.path.sep.join(["data", "facenet_keras.h5"])
+        print("initial facenet model...")
+        facePath = utils.get_file_path("data", "facenet_keras.h5")
        # cvPath = os.path.sep.join(["data", "haarcascade_frontalface_alt2.xml"])
         #faceCascade = cv2.CascadeClassifier(cvPath)
-        self.model_Face = load_model(facePath, custom_objects={ 'loss': self.triplet_loss })
+        return load_model(facePath, custom_objects={ 'loss': self.triplet_loss }, compile=False)
+
+    # initial labels
+    def init_label(self):
+        print("initial yolo label...")
+        labelsPath = utils.get_file_path("cfg", "classes.names")
+        return open(labelsPath).read().strip().split("\n")
+
+    # initial colors
+    def init_color(self):
+        print("initial yolo colors...")
+        np.random.seed(42)
+        return np.random.randint(0, 255, size=(len(self.LABELS), 3), dtype="uint8")
+
+    def init_weight(self):
+        print("[INFO] loading YOLO from disk...")
+        # derive the paths to the YOLO weights and model configuration
+        weightsPath = os.path.sep.join(["data", "yolov4.weights"])
+        configPath = os.path.sep.join(["cfg", "yolov4.cfg"])
+        #return cv2.dnn.readNetFromDarknet(configPath, weightsPath)
+        return cv2.dnn_DetectionModel(configPath, weightsPath)
 
     def triplet_loss(y_true, y_pred, alpha = 0.2):
+        print("using triplet_loss function...")
         anchor, positive, negative = y_pred[0], y_pred[1], y_pred[2]
 
         # Step 1: Compute the (encoding) distance between the anchor and the positive
@@ -61,6 +91,7 @@ class FaceNet:
 
     # get face embedding and perform face recognition
     def get_embedding(self, image):
+        print("get enbedding code function begin...")
         # scale pixel values
         face = image.astype('float32')
         # standardization
@@ -72,6 +103,7 @@ class FaceNet:
         return encode
 
     def find_person(self, encoding, min_dist=1):
+        print("find person function begin...")
         min_dist = float("inf")
         encoding = in_encoder.transform(np.expand_dims(encoding, axis=0))[0]
         for (name, db_enc) in self.database.items():
@@ -86,13 +118,17 @@ class FaceNet:
             return identity
         return "None"
 
-    def detect(self, frame, net, ln, LABELS, COLORS, W, H):
+    def detect(self, frame, W, H):
         # construct a blob from the input frame and then perform a forward
         # pass of the YOLO object detector, giving us our bounding boxes
         # and associated probabilities
         blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (416, 416), swapRB=True, crop=False)
-        net.setInput(blob)
-        layerOutputs = net.forward(ln)
+
+        ln = self.net.getLayerNames()
+        ln = [ln[i[0] - 1] for i in self.net.getUnconnectedOutLayers()]
+
+        self.net.setInput(blob)
+        layerOutputs = self.net.forward(ln)
 
         # initialize our lists of detected bounding boxes, confidences,
         # and class IDs, respectively
@@ -152,7 +188,7 @@ class FaceNet:
                         #face_frame = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
                         face_frame = img_to_array(crop)
                         name = "None"
-                        if face_frame.size!=0 :
+                        if face_frame.size != 0 :
                             face_frame = cv2.resize(face_frame, (160, 160))
                             encode = self.get_embedding(face_frame)
                             name = self.find_person(encode, self.database)
@@ -176,9 +212,9 @@ class FaceNet:
                 (w, h) = (boxes[i][2], boxes[i][3])
 
                 # draw a bounding box rectangle and label on the frame
-                color = [int(c) for c in COLORS[classIDs[i]]]
+                color = [int(c) for c in self.COLORS[classIDs[i]]]
                 cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
-                text = "{}: {:.4f}".format(LABELS[classIDs[i]]+":"+names[i], confidences[i])
+                text = "{}: {:.4f}".format(self.LABELS[classIDs[i]]+":"+names[i], confidences[i])
                 cv2.putText(frame, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 10)
 
     # use MTCNN to detect faces and return face array
